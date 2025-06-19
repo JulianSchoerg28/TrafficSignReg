@@ -107,7 +107,7 @@ sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
 plt.title("Confusion Matrix")
 plt.xlabel("Predicted Label")
 plt.ylabel("True Label")
-plt.savefig(working_directory / "models" / "confusion_matrix.png")
+plt.savefig(working_directory / "models" / "cnn_confusion_matrix.png")
 
 # === Plot training history ===
 plt.figure(figsize=(10, 5))
@@ -118,7 +118,7 @@ plt.xlabel('Epoch')
 plt.ylabel('Accuracy')
 plt.legend()
 plt.grid(True)
-plt.savefig(working_directory / "models" / "accuracy_plot.png")
+plt.savefig(working_directory / "models" / "cnn_accuracy_plot.png")
 
 # === Save the model ===
 model.save(working_directory / "models" / "traffic_sign_cnn_model.h5")
