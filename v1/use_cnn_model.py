@@ -10,6 +10,8 @@ image_path = working_directory / "archive" / "beispielbild.png"
 image_size = 32
 
 # === Bild laden & vorbereiten
+
+
 def prepare_image(path):
     image = Image.open(path).resize((image_size, image_size))
     if image.mode != "RGB":
@@ -17,8 +19,10 @@ def prepare_image(path):
     image = np.array(image) / 255.0
     return image
 
+
 # === Lade Bild für beide Modelle
-image_for_cnn = np.expand_dims(prepare_image(image_path), axis=0)  # (1, 32, 32, 3)
+image_for_cnn = np.expand_dims(prepare_image(
+    image_path), axis=0)  # (1, 32, 32, 3)
 image_for_mlp = image_for_cnn.reshape(1, -1)  # (1, 3072)
 
 # === Modelle laden
@@ -32,8 +36,8 @@ mlp_pred_probs = mlp_model.predict(image_for_mlp)
 cnn_pred_class = np.argmax(cnn_pred_probs)
 mlp_pred_class = np.argmax(mlp_pred_probs)
 
-print("🧠 CNN-Modell:")
+print("CNModell:")
 print(f"  → Klasse: {cnn_pred_class} mit {100 * np.max(cnn_pred_probs):.2f}%")
 
-print("🧠 MLP-Modell:")
+print("MLModell:")
 print(f"  → Klasse: {mlp_pred_class} mit {100 * np.max(mlp_pred_probs):.2f}%")
