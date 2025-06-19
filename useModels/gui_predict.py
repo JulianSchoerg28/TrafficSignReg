@@ -54,7 +54,10 @@ def predict_image(img_path):
         )
 
         current_sign_label = f"{label_cnn} Schild"
+
+        # Chat zurücksetzen
         chat_output.delete("1.0", tk.END)
+        chat_input.delete("1.0", tk.END)
 
         # Bild anzeigen
         tk_img = ImageTk.PhotoImage(pil_img.resize((150, 150)))
@@ -71,14 +74,14 @@ def open_image():
         predict_image(file_path)
 
 # === Chat absenden
-def send_chat():
+def send_chat(event=None):
     user_input = chat_input.get("1.0", tk.END).strip()
     if user_input:
         chat_output.insert(tk.END, f"Du: {user_input}\n")
         chat_input.delete("1.0", tk.END)
 
         combined_prompt = f"Frage zum {current_sign_label}: {user_input}"
-        output = llm(f"[INST] {combined_prompt} [/INST]", stop=["</s>"], max_tokens=500)
+        output = llm(f"[INST] {combined_prompt} [/INST]", stop=["</s>"], max_tokens=200)
         response = output["choices"][0]["text"].strip()
 
         chat_output.insert(tk.END, f"KI: {response}\n\n")
@@ -109,6 +112,8 @@ chat_output.pack(padx=10, pady=5, fill="both")
 
 chat_input = tk.Text(root, height=2, font=("Arial", 10))
 chat_input.pack(padx=10, pady=(0, 5), fill="x")
+chat_input.bind("<Return>", send_chat)
+chat_input.bind("<Shift-Return>", lambda event: chat_input.insert(tk.INSERT, "\n"))
 
 send_button = tk.Button(root, text="Absenden", command=send_chat)
 send_button.pack(pady=(0, 10))
