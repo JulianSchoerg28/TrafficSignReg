@@ -10,6 +10,13 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPool2D, Flatten, Dense, Dropout
 import tensorflow as tf
 
+from pathlib import Path
+
+working_directory = Path(__file__).resolve().parent.parent
+# create dir models if not exists
+output_dir = working_directory / "models"
+output_dir.mkdir(parents=True, exist_ok=True)
+
 print("TensorFlow-Version:", tf.__version__)
 print("GPU verfügbar:", tf.config.list_physical_devices('GPU'))
 
@@ -20,7 +27,7 @@ tf.random.set_seed(42)
 # === Parameters ===
 num_classes = 43
 image_size = 32
-dataset_path = "/home/lenz/Documents/FH-CampusWien_local/AI/TrafficSignRecognition/archive/train"
+dataset_path = working_directory / "archive" / "train"
 
 # === Load and preprocess data ===
 data = []
@@ -100,7 +107,7 @@ sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
 plt.title("Confusion Matrix")
 plt.xlabel("Predicted Label")
 plt.ylabel("True Label")
-plt.savefig("confusion_matrix.png")
+plt.savefig(working_directory / "models" / "confusion_matrix.png")
 
 # === Plot training history ===
 plt.figure(figsize=(10, 5))
@@ -111,8 +118,8 @@ plt.xlabel('Epoch')
 plt.ylabel('Accuracy')
 plt.legend()
 plt.grid(True)
-plt.savefig("accuracy_plot.png")
+plt.savefig(working_directory / "models" / "accuracy_plot.png")
 
 # === Save the model ===
-model.save("traffic_sign_cnn_model.h5")
+model.save(working_directory / "models" / "traffic_sign_cnn_model.h5")
 print("Model saved as traffic_sign_cnn_model.h5")
