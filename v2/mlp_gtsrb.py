@@ -13,6 +13,9 @@ from pathlib import Path
 # === Setup ===
 working_dir = Path(__file__).resolve().parent.parent
 data_dir = working_dir / "archive" / "train"
+output_dir = working_dir / "models"
+output_dir.mkdir(exist_ok=True)
+
 num_classes = 43
 image_size = 32
 
@@ -34,18 +37,18 @@ for class_id in range(num_classes):
         except Exception as e:
             print(f"Fehler bei {img_name}: {e}")
 
-images = np.array(images) / 255.0  # Normalisieren
+images = np.array(images) / 255.0
 labels = np.array(labels)
 print(f"{len(images)} Bilder geladen.")
 
-# === Bilder flach machen (MLP braucht Vektoren) ===
+# === Flatten für MLP
 X = images.reshape((images.shape[0], -1))  # z. B. (39209, 3072)
 y = to_categorical(labels, num_classes)
 
-# === Split
+# === Train/Test-Split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=labels, random_state=42)
 
-# === MLP-Modell definieren
+# === MLP Modell
 model = Sequential([
     Dense(512, activation='relu', input_shape=(X.shape[1],)),
     Dense(256, activation='relu'),
@@ -58,7 +61,7 @@ model.summary()
 # === Training
 history = model.fit(X_train, y_train, epochs=15, batch_size=64, validation_split=0.2)
 
-# === Bewertung
+# === Evaluation
 loss, acc = model.evaluate(X_test, y_test)
 print(f"Test-Accuracy: {acc:.4f}")
 
@@ -72,14 +75,14 @@ print(classification_report(y_true, y_pred_classes))
 
 cm = confusion_matrix(y_true, y_pred_classes)
 plt.figure(figsize=(12, 8))
-sns.heatmap(cm, annot=False, cmap="Blues")
+sns.heatmap(cm, annot=True, fmt="d", cmap="Blues")
 plt.title("Confusion Matrix (MLP)")
-plt.xlabel("Predicted")
-plt.ylabel("True")
+plt.xlabel("Predicted Label")
+plt.ylabel("True Label")
 plt.tight_layout()
-plt.savefig(working_dir / "models" / "mlp_confusion_matrix.png")
+plt.savefig(output_dir / "confusion_matrix_mlp.png")
 
-# === Trainingsverlauf plotten
+# === Plots speichern
 plt.figure(figsize=(10, 4))
 plt.subplot(1, 2, 1)
 plt.plot(history.history["loss"], label="Train Loss")
@@ -94,5 +97,8 @@ plt.legend()
 plt.title("Accuracy")
 
 plt.tight_layout()
-plt.savefig(working_dir / "models" / "mlp_accuracy_plot.png")
-print("Plots gespeichert unter models/")
+plt.savefig(output_dir / "accuracy_plot_mlp.png")
+
+# === Modell speichern
+model.save(output_dir / "mlp_model.h5")
+print("Modell gespeichert als mlp_model.h5")

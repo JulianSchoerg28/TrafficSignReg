@@ -3,23 +3,37 @@ from PIL import Image
 import numpy as np
 from pathlib import Path
 
+# === Setup
 working_directory = Path(__file__).resolve().parent.parent
-
-# Modell laden
-model = load_model(working_directory / "traffic_sign_cnn_model.h5")
-
-# Bild laden und vorbereiten
+models_dir = working_directory / "models"
 image_path = working_directory / "archive" / "beispielbild.png"
 image_size = 32
-image = Image.open(image_path).resize((image_size, image_size))
-image = np.array(image)
-if image.shape != (image_size, image_size, 3):
-    image = Image.open(image_path).convert("RGB")
-    image = np.array(image)
-image = image / 255.0
-image = np.expand_dims(image, axis=0)
 
-# Vorhersage
-pred_probs = model.predict(image)
-pred_class = np.argmax(pred_probs)
-print(f"Vorhergesagte Klasse: {pred_class}")
+# === Bild laden & vorbereiten
+def prepare_image(path):
+    image = Image.open(path).resize((image_size, image_size))
+    if image.mode != "RGB":
+        image = image.convert("RGB")
+    image = np.array(image) / 255.0
+    return image
+
+# === Lade Bild für beide Modelle
+image_for_cnn = np.expand_dims(prepare_image(image_path), axis=0)  # (1, 32, 32, 3)
+image_for_mlp = image_for_cnn.reshape(1, -1)  # (1, 3072)
+
+# === Modelle laden
+cnn_model = load_model(models_dir / "traffic_sign_cnn_model.h5")
+mlp_model = load_model(models_dir / "mlp_model.h5")
+
+# === Vorhersagen
+cnn_pred_probs = cnn_model.predict(image_for_cnn)
+mlp_pred_probs = mlp_model.predict(image_for_mlp)
+
+cnn_pred_class = np.argmax(cnn_pred_probs)
+mlp_pred_class = np.argmax(mlp_pred_probs)
+
+print("🧠 CNN-Modell:")
+print(f"  → Klasse: {cnn_pred_class} mit {100 * np.max(cnn_pred_probs):.2f}%")
+
+print("🧠 MLP-Modell:")
+print(f"  → Klasse: {mlp_pred_class} mit {100 * np.max(mlp_pred_probs):.2f}%")
