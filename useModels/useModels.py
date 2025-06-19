@@ -8,7 +8,7 @@ import json
 current_dir = Path(__file__).parent
 working_directory = current_dir.parent
 models_dir = working_directory / "models"
-image_path = working_directory / "archive" / "beispielbild.png"
+image_path = working_directory / "archive" / "beispiel2.png"
 image_size = 32
 
 # === Klassennamen laden
@@ -16,6 +16,8 @@ with open(current_dir / "class_mapping_de.json", "r", encoding="utf-8") as f:
     class_map = json.load(f)
 
 # === Bild vorbereiten
+
+
 def prepare_image(path):
     image = Image.open(path).resize((image_size, image_size))
     if image.mode != "RGB":
@@ -23,7 +25,9 @@ def prepare_image(path):
     image = np.array(image) / 255.0
     return image
 
-image_for_cnn = np.expand_dims(prepare_image(image_path), axis=0)  # (1, 32, 32, 3)
+
+image_for_cnn = np.expand_dims(prepare_image(
+    image_path), axis=0)  # (1, 32, 32, 3)
 image_for_mlp = image_for_cnn.reshape(1, -1)  # (1, 3072)
 
 # === Modelle laden
@@ -42,7 +46,9 @@ mlp_name = class_map[str(mlp_pred_class)]
 
 # === Ausgabe
 print("CNN-Modell:")
-print(f"  → Klasse: {cnn_pred_class} ({cnn_name}) mit {100 * np.max(cnn_pred_probs):.2f}%")
+print(f"  → Klasse: {cnn_pred_class} ({cnn_name}) mit {
+      100 * np.max(cnn_pred_probs):.2f}%")
 
 print("MLP-Modell:")
-print(f"  → Klasse: {mlp_pred_class} ({mlp_name}) mit {100 * np.max(mlp_pred_probs):.2f}%")
+print(f"  → Klasse: {mlp_pred_class} ({mlp_name}) mit {
+      100 * np.max(mlp_pred_probs):.2f}%")
