@@ -43,8 +43,8 @@ def predict_image(img_path):
         prob_mlp = 100 * np.max(pred_mlp)
 
         result_text.set(
-            f"🧠 CNN → Klasse {class_cnn}: {label_cnn} ({prob_cnn:.2f}%)\n"
-            f"🧠 MLP → Klasse {class_mlp}: {label_mlp} ({prob_mlp:.2f}%)"
+            f"CNN → Klasse {class_cnn}: {label_cnn} ({prob_cnn:.2f}%)\n"
+            f"MLP → Klasse {class_mlp}: {label_mlp} ({prob_mlp:.2f}%)"
         )
 
         # Bild anzeigen
