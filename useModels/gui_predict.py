@@ -9,14 +9,15 @@ from llama_cpp import Llama
 
 # === Setup
 current_dir = Path(__file__).parent
-working_dir = current_dir.parent
-models_dir = working_dir / "models"
+working_directory = current_dir.parent
+models_dir = working_directory / "models"
 cnn_model = load_model(models_dir / "traffic_sign_cnn_model.h5")
 mlp_model = load_model(models_dir / "mlp_model.h5")
 llama_model_path = models_dir / "mistral-7b-instruct-v0.1.Q4_K_M.gguf"
 llm = Llama(model_path=str(llama_model_path), n_ctx=512)
 
 image_size = 32
+current_sign_label = ""
 
 with open(current_dir / "class_mapping_de.json", "r", encoding="utf-8") as f:
     class_map = json.load(f)
@@ -31,6 +32,7 @@ def prepare_image(path):
 
 # === Vorhersagefunktion
 def predict_image(img_path):
+    global current_sign_label
     try:
         pil_img, cnn_input, mlp_input = prepare_image(img_path)
 
@@ -50,6 +52,9 @@ def predict_image(img_path):
             f"CNN → Klasse {class_cnn}: {label_cnn} ({prob_cnn:.2f}%)\n"
             f"MLP → Klasse {class_mlp}: {label_mlp} ({prob_mlp:.2f}%)"
         )
+
+        current_sign_label = f"{label_cnn} Schild"
+        chat_output.delete("1.0", tk.END)
 
         # Bild anzeigen
         tk_img = ImageTk.PhotoImage(pil_img.resize((150, 150)))
@@ -72,7 +77,8 @@ def send_chat():
         chat_output.insert(tk.END, f"Du: {user_input}\n")
         chat_input.delete("1.0", tk.END)
 
-        output = llm(f"[INST] {user_input} [/INST]", stop=["</s>"], max_tokens=200)
+        combined_prompt = f"Frage zum {current_sign_label}: {user_input}"
+        output = llm(f"[INST] {combined_prompt} [/INST]", stop=["</s>"], max_tokens=500)
         response = output["choices"][0]["text"].strip()
 
         chat_output.insert(tk.END, f"KI: {response}\n\n")
