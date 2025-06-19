@@ -1,10 +1,11 @@
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, scrolledtext
 from PIL import Image, ImageTk
 import numpy as np
 import json
 from pathlib import Path
 from tensorflow.keras.models import load_model
+from llama_cpp import Llama
 
 # === Setup
 current_dir = Path(__file__).parent
@@ -12,6 +13,9 @@ working_dir = current_dir.parent
 models_dir = working_dir / "models"
 cnn_model = load_model(models_dir / "traffic_sign_cnn_model.h5")
 mlp_model = load_model(models_dir / "mlp_model.h5")
+llama_model_path = models_dir / "mistral-7b-instruct-v0.1.Q4_K_M.gguf"
+llm = Llama(model_path=str(llama_model_path), n_ctx=512)
+
 image_size = 32
 
 with open(current_dir / "class_mapping_de.json", "r", encoding="utf-8") as f:
@@ -61,19 +65,46 @@ def open_image():
     if file_path:
         predict_image(file_path)
 
+# === Chat absenden
+def send_chat():
+    user_input = chat_input.get("1.0", tk.END).strip()
+    if user_input:
+        chat_output.insert(tk.END, f"Du: {user_input}\n")
+        chat_input.delete("1.0", tk.END)
+
+        output = llm(f"[INST] {user_input} [/INST]", stop=["</s>"], max_tokens=200)
+        response = output["choices"][0]["text"].strip()
+
+        chat_output.insert(tk.END, f"KI: {response}\n\n")
+        chat_output.see(tk.END)
+
 # === GUI aufbauen
 root = tk.Tk()
-root.title("Verkehrsschilder-Vorhersage")
-root.geometry("500x400")
+root.title("Verkehrsschilder + KI-Chat")
+root.geometry("700x600")
 root.resizable(False, False)
 
-tk.Label(root, text="Wähle ein Bild aus:", font=("Arial", 14)).pack(pady=10)
-tk.Button(root, text="Bild auswählen", command=open_image, font=("Arial", 12)).pack()
+frame_top = tk.Frame(root)
+frame_top.pack(pady=10)
+
+btn = tk.Button(frame_top, text="Bild auswählen", command=open_image, font=("Arial", 12))
+btn.pack()
 
 image_label = tk.Label(root)
 image_label.pack(pady=10)
 
 result_text = tk.StringVar()
-tk.Label(root, textvariable=result_text, font=("Arial", 12), justify="center").pack(pady=10)
+result_label = tk.Label(root, textvariable=result_text, font=("Arial", 12), justify="center")
+result_label.pack(pady=10)
+
+# Chatbereich
+chat_output = scrolledtext.ScrolledText(root, height=10, wrap=tk.WORD, font=("Arial", 10))
+chat_output.pack(padx=10, pady=5, fill="both")
+
+chat_input = tk.Text(root, height=2, font=("Arial", 10))
+chat_input.pack(padx=10, pady=(0, 5), fill="x")
+
+send_button = tk.Button(root, text="Absenden", command=send_chat)
+send_button.pack(pady=(0, 10))
 
 root.mainloop()
