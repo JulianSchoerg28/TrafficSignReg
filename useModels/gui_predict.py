@@ -6,7 +6,6 @@ import json
 from pathlib import Path
 from tensorflow.keras.models import load_model
 from llama_cpp import Llama
-import os
 
 # === Setup
 current_dir = Path(__file__).parent
@@ -24,6 +23,8 @@ with open(current_dir / "class_mapping_de.json", "r", encoding="utf-8") as f:
     class_map = json.load(f)
 
 # === Bild vorbereiten
+
+
 def prepare_image(path):
     image = Image.open(path).resize((image_size, image_size))
     if image.mode != "RGB":
@@ -32,6 +33,8 @@ def prepare_image(path):
     return image, np.expand_dims(norm, axis=0), norm.reshape(1, -1)
 
 # === Vorhersagefunktion
+
+
 def predict_image(img_path):
     global current_sign_label
     try:
@@ -54,7 +57,7 @@ def predict_image(img_path):
             f"MLP → Klasse {class_mlp}: {label_mlp} ({prob_mlp:.2f}%)"
         )
 
-        current_sign_label = f"Deutsches {label_cnn} Verkehrsschild"
+        current_sign_label = f" {label_cnn} Verkehrsschild"
 
         # Chat zurücksetzen
         chat_output.delete("1.0", tk.END)
@@ -69,6 +72,8 @@ def predict_image(img_path):
         messagebox.showerror("Fehler", str(e))
 
 # === Datei auswählen
+
+
 def open_image():
     initial_dir = working_directory / "archive"
     file_path = filedialog.askopenfilename(
@@ -79,6 +84,8 @@ def open_image():
         predict_image(file_path)
 
 # === Chat absenden
+
+
 def send_chat(event=None):
     user_input = chat_input.get("1.0", tk.END).strip()
     if user_input:
@@ -86,12 +93,14 @@ def send_chat(event=None):
         chat_input.delete("1.0", tk.END)
 
         combined_prompt = f"Frage zum {current_sign_label}: {user_input}"
-        output = llm(f"[INST] {combined_prompt} [/INST]", stop=["</s>"], max_tokens=200)
+        output = llm(f"[INST] {combined_prompt} [/INST]",
+                     stop=["</s>"], max_tokens=200)
         response = output["choices"][0]["text"].strip()
 
         chat_output.insert(tk.END, f"KI: {response}\n\n")
         chat_output.see(tk.END)
     return "break"
+
 
 # === GUI aufbauen
 root = tk.Tk()
@@ -102,26 +111,32 @@ root.resizable(False, False)
 frame_top = tk.Frame(root)
 frame_top.pack(pady=10)
 
-btn = tk.Button(frame_top, text="Bild auswählen", command=open_image, font=("Arial", 12))
+btn = tk.Button(frame_top, text="Bild auswählen",
+                command=open_image, font=("Arial", 12))
 btn.pack()
 
 image_label = tk.Label(root)
 image_label.pack(pady=10)
 
 result_text = tk.StringVar()
-result_label = tk.Label(root, textvariable=result_text, font=("Arial", 12), justify="center")
+result_label = tk.Label(root, textvariable=result_text,
+                        font=("Arial", 12), justify="center")
 result_label.pack(pady=10)
 
 # Chatbereich
-chat_output = scrolledtext.ScrolledText(root, height=10, wrap=tk.WORD, font=("Arial", 10))
+chat_output = scrolledtext.ScrolledText(
+    root, height=10, wrap=tk.WORD, font=("Arial", 10))
 chat_output.pack(padx=10, pady=5, fill="both")
 
 chat_input = tk.Text(root, height=2, font=("Arial", 10))
 chat_input.pack(padx=10, pady=(0, 5), fill="x")
 chat_input.bind("<Return>", send_chat)
-chat_input.bind("<Shift-Return>", lambda event: chat_input.insert(tk.INSERT, "\n"))
+chat_input.bind("<Shift-Return>",
+                lambda event: chat_input.insert(tk.INSERT, "\n"))
 
 send_button = tk.Button(root, text="Absenden", command=send_chat)
 send_button.pack(pady=(0, 10))
 
+# radio_button_mistral = tk.Radiobutton(root, text="mistral-7b")
+# radio_button_mistral.pack()
 root.mainloop()
